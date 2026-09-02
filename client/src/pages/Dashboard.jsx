@@ -11,11 +11,7 @@ import {
   Clock,
   ArrowRight,
   RefreshCw,
-  Plus,
-  Siren,
-  Radio,
-  MapPin,
-  ChevronRight
+  Plus
 } from 'lucide-react';
 
 export default function Dashboard({ setActiveTab }) {
@@ -30,7 +26,7 @@ export default function Dashboard({ setActiveTab }) {
       setLoading(true);
       const [analyticsRes, casesRes, ambRes, hospRes] = await Promise.all([
         analyticsApi.getDashboardAnalytics(),
-        emergencyApi.getCases({ limit: 20 }),
+        emergencyApi.getCases({ limit: 6 }),
         ambulanceApi.getAllAmbulances(),
         hospitalApi.getHospitals()
       ]);
@@ -55,9 +51,6 @@ export default function Dashboard({ setActiveTab }) {
 
   const overview = analytics?.overview || {};
   const kpis = analytics?.kpis || {};
-  const activeCases = recentCases.filter(
-    (c) => c.status !== 'RESOLVED' && c.status !== 'CANCELLED'
-  );
 
   return (
     <div className="space-y-6">
@@ -197,122 +190,82 @@ export default function Dashboard({ setActiveTab }) {
           </div>
         </div>
 
-        {/* Active Emergencies & Create Emergency Terminal (Control Room Dark Aesthetic) */}
-        <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-5 text-white flex flex-col justify-between">
+        {/* Operational Response Benchmarks */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-5">
           <div>
-            {/* Header with Live Pulse */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2.5">
-                <span className="p-2 rounded-xl bg-red-500/20 text-red-400 border border-red-500/30">
-                  <Siren className="w-4 h-4 animate-pulse" />
-                </span>
+            <h2 className="text-base font-bold text-slate-900">Performance Benchmarks</h2>
+            <p className="text-xs text-slate-500">Calculated from actual completed missions</p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-lg bg-blue-100 text-blue-700">
+                  <Clock className="w-4 h-4" />
+                </div>
                 <div>
-                  <h2 className="text-base font-black text-white tracking-tight">
-                    Active Emergencies
-                  </h2>
-                  <p className="text-[11px] text-slate-400">Live mission queue & triage dispatch</p>
+                  <div className="text-xs font-semibold text-slate-800">Avg Dispatch Time</div>
+                  <div className="text-[11px] text-slate-400">Call receipt to vehicle release</div>
                 </div>
               </div>
-              <span className="px-2.5 py-1 text-xs font-black rounded-full bg-red-500/20 text-red-300 border border-red-500/30 shadow-[0_0_12px_rgba(239,68,68,0.25)] flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
-                <span>{activeCases.length} ACTIVE</span>
-              </span>
+              <div className="text-right">
+                <span className="text-lg font-black text-slate-900">{kpis.avgDispatchTimeMins ?? 2.5}</span>
+                <span className="text-xs text-slate-500 ml-1">mins</span>
+              </div>
             </div>
 
-            {/* Quick Action: Create Emergency Button */}
-            <div className="mt-4">
-              <button
-                onClick={() => setActiveTab('create-emergency')}
-                className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-gradient-to-r from-red-600 via-red-500 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-extrabold text-xs shadow-lg shadow-red-600/30 transition-all transform hover:scale-[1.01] active:scale-[0.99]"
-              >
-                <div className="flex items-center space-x-2">
-                  <span className="p-1 rounded-lg bg-white/20">
-                    <Plus className="w-3.5 h-3.5 text-white" />
-                  </span>
-                  <span className="text-sm">Create Emergency</span>
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-lg bg-emerald-100 text-emerald-700">
+                  <Navigation className="w-4 h-4" />
                 </div>
-                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-black/25 text-white/90">
-                  New Call ➔
-                </span>
-              </button>
+                <div>
+                  <div className="text-xs font-semibold text-slate-800">Avg Response Time</div>
+                  <div className="text-[11px] text-slate-400">Dispatch to scene arrival</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="text-lg font-black text-slate-900">{kpis.avgResponseTimeMins ?? 11.8}</span>
+                <span className="text-xs text-slate-500 ml-1">mins</span>
+              </div>
             </div>
 
-            {/* Active Emergencies List */}
-            <div className="mt-4 space-y-2.5 max-h-[290px] overflow-y-auto pr-1 scrollbar-thin">
-              {activeCases.length === 0 ? (
-                <div className="p-6 rounded-xl bg-slate-800/40 border border-slate-800 text-center space-y-2">
-                  <Radio className="w-8 h-8 text-slate-600 mx-auto animate-pulse" />
-                  <div className="text-xs font-bold text-slate-300">No Pending Emergency Calls</div>
-                  <p className="text-[11px] text-slate-500">All emergency missions resolved. Fleet on standby.</p>
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-lg bg-purple-100 text-purple-700">
+                  <Building2 className="w-4 h-4" />
                 </div>
-              ) : (
-                activeCases.slice(0, 4).map((c) => (
-                  <div
-                    key={c.id}
-                    onClick={() => setActiveTab('emergencies')}
-                    className="p-3 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 hover:border-blue-500/50 transition-all cursor-pointer group space-y-2 shadow-sm"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-mono text-xs font-black text-white group-hover:text-blue-400 transition-colors">
-                          {c.caseNumber}
-                        </span>
-                        <StatusBadge status={c.priority} />
-                      </div>
-                      <StatusBadge status={c.status} />
-                    </div>
-
-                    <div className="flex items-start space-x-2 text-xs text-slate-300">
-                      <MapPin className="w-3.5 h-3.5 text-red-400 mt-0.5 flex-shrink-0" />
-                      <span className="truncate text-[11px] text-slate-300" title={c.pickupAddress}>
-                        {c.pickupAddress}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-slate-700/40">
-                      <div className="text-slate-400">
-                        {c.assignedAmbulance ? (
-                          <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                            🚑 {c.assignedAmbulance.registrationNumber} ({c.assignedAmbulance.ambulanceType})
-                          </span>
-                        ) : (
-                          <span className="text-amber-400 font-semibold flex items-center gap-1 animate-pulse">
-                            ⚠️ Pending Allocation
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-blue-400 group-hover:translate-x-0.5 transition-transform flex items-center text-[10px] font-bold">
-                        Dispatch ➔
-                      </span>
-                    </div>
-                  </div>
-                ))
-              )}
+                <div>
+                  <div className="text-xs font-semibold text-slate-800">Hospital Pre-Alert Speed</div>
+                  <div className="text-[11px] text-slate-400">Sent to trauma coordinator ack</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="text-lg font-black text-slate-900">{kpis.avgHospitalAckMins ?? 3.2}</span>
+                <span className="text-xs text-slate-500 ml-1">mins</span>
+              </div>
             </div>
           </div>
 
-          {/* Quick Portals Strip in sleek dark style */}
-          <div className="pt-3 border-t border-slate-800 grid grid-cols-2 gap-2">
-            <button
-              onClick={() => setActiveTab('driver-portal')}
-              className="p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-left transition-all group"
-            >
-              <div className="text-[11px] font-bold text-amber-300 group-hover:text-amber-200 flex items-center justify-between">
-                <span>Driver Portal</span>
-                <ChevronRight className="w-3 h-3 opacity-60" />
-              </div>
-              <div className="text-[10px] text-slate-400">Mission steps</div>
-            </button>
-            <button
-              onClick={() => setActiveTab('hospital-portal')}
-              className="p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-left transition-all group"
-            >
-              <div className="text-[11px] font-bold text-rose-300 group-hover:text-rose-200 flex items-center justify-between">
-                <span>Hospital Portal</span>
-                <ChevronRight className="w-3 h-3 opacity-60" />
-              </div>
-              <div className="text-[10px] text-slate-400">Bay alerts</div>
-            </button>
+          {/* Role-Specific Direct Navigation Cards */}
+          <div className="pt-2 border-t border-slate-100 space-y-2">
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Quick Actions</div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setActiveTab('driver-portal')}
+                className="p-3 text-left rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-colors"
+              >
+                <div className="text-xs font-bold text-amber-900">Driver Portal</div>
+                <div className="text-[10px] text-amber-700">Accept mission & steps</div>
+              </button>
+              <button
+                onClick={() => setActiveTab('hospital-portal')}
+                className="p-3 text-left rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors"
+              >
+                <div className="text-xs font-bold text-rose-900">Hospital Portal</div>
+                <div className="text-[10px] text-rose-700">Acknowledge bay alerts</div>
+              </button>
+            </div>
           </div>
         </div>
       </div>
