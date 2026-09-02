@@ -84,7 +84,7 @@ export default function Header({ onToggleSidebar }) {
             </a>
 
             <a
-              href="/vimal"
+              href="/vimal/index.html"
               target="_blank"
               rel="noopener noreferrer"
               className="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-extrabold text-xs shadow-md shadow-cyan-500/20 hover:from-cyan-700 hover:to-blue-700 transition-all transform hover:scale-105"

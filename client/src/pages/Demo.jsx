@@ -10,7 +10,7 @@ export default function Demo() {
   };
 
   const handleOpenExternal = () => {
-    window.open('/vimal', '_blank', 'noopener,noreferrer');
+    window.open('/vimal/index.html', '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -73,7 +73,7 @@ export default function Demo() {
       >
         <iframe
           key={iframeKey}
-          src="/vimal"
+          src="/vimal/index.html"
           title="Demo"
           className="w-full h-full border-0"
           allow="geolocation; accelerometer; gyroscope; fullscreen"
