@@ -3,87 +3,121 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, Tooltip, useMap } fro
 import L from 'leaflet';
 import { getShortestRoadRoute } from '../../services/routingService';
 
-// 1. Google Maps-style Ambulance Vehicle Marker
+// 1. Realistic 3D Ambulance Vehicle Model (Google Maps 3D Navigation Token Style)
 const createVehicleIcon = (status, reg, isSelected) => {
   const isEmergency = status === 'ON_TRIP';
-  const mainColor = isEmergency ? '#dc2626' : (status === 'AVAILABLE' ? '#16a34a' : '#d97706');
-  const glowShadow = isSelected
-    ? '0 0 0 3px #3b82f6, 0 8px 20px rgba(0,0,0,0.35)'
-    : '0 3px 10px rgba(0,0,0,0.25)';
+  const cleanId = reg ? reg.replace(/[^a-zA-Z0-9]/g, '') : 'amb';
 
   return L.divIcon({
-    className: 'custom-vehicle-marker',
+    className: 'custom-vehicle-marker-3d',
     html: `
-      <div style="display:flex; flex-direction:column; align-items:center; cursor:pointer; transform:${isSelected ? 'scale(1.12)' : 'scale(1)'}; transition:all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); user-select:none;">
-        <!-- Google Maps Vehicle Pill -->
-        <div style="
-          background: #ffffff;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          padding: 4px 9px;
-          border-radius: 9999px;
-          border: 2px solid ${mainColor};
-          box-shadow: ${glowShadow};
-          white-space: nowrap;
-          font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-        ">
-          <!-- Ambulance Icon Badge -->
-          <div style="
-            width: 20px;
-            height: 20px;
-            background: ${mainColor};
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-          ">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10H4c-1.1 0-2 .9-2 2v4c0 .6.4 1 1 1h2"/>
-              <circle cx="7" cy="17" r="2"/>
-              <path d="M9 17h6"/>
-              <circle cx="17" cy="17" r="2"/>
-              <path d="M12 6v4"/>
-              <path d="M10 8h4"/>
-            </svg>
-          </div>
-          <!-- Registration & Status -->
-          <div style="display:flex; flex-direction:column; line-height:1.15; text-align:left;">
-            <span style="font-size:11px; font-weight:800; color:#0f172a; letter-spacing:0.02em;">${reg}</span>
-            <span style="font-size:9px; font-weight:700; color:${mainColor}; text-transform:uppercase;">${status.replace('_', ' ')}</span>
-          </div>
-        </div>
+      <div style="
+        position: relative;
+        width: 68px;
+        height: 54px;
+        cursor: pointer;
+        user-select: none;
+        transform: ${isSelected ? 'scale(1.22)' : 'scale(1)'};
+        transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      ">
+        <svg width="68" height="54" viewBox="0 0 68 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bodySide-${cleanId}" x1="10" y1="12" x2="40" y2="42" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#ffffff"/>
+              <stop offset="0.6" stop-color="#f8fafc"/>
+              <stop offset="1" stop-color="#e2e8f0"/>
+            </linearGradient>
+            <linearGradient id="bodyFront-${cleanId}" x1="40" y1="20" x2="58" y2="35" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#e2e8f0"/>
+              <stop offset="1" stop-color="#cbd5e1"/>
+            </linearGradient>
+            <linearGradient id="glassGrad-${cleanId}" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#7dd3fc"/>
+              <stop offset="100%" stop-color="#0284c7"/>
+            </linearGradient>
+          </defs>
 
-        <!-- Google Maps Pin Pointer Tip -->
-        <div style="
-          width: 0;
-          height: 0;
-          border-left: 6px solid transparent;
-          border-right: 6px solid transparent;
-          border-top: 8px solid ${mainColor};
-          margin-top: -1px;
-          filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
-        "></div>
+          <!-- 1. Ground Drop Shadow (Realistic 3D contact on street pavement) -->
+          <ellipse cx="34" cy="47" rx="26" ry="6" fill="#0f172a" fill-opacity="0.35"/>
 
-        <!-- Animated Emergency Siren Beacon Wave (when on trip) -->
-        ${isEmergency ? `
-          <div style="
-            position: absolute;
-            bottom: -2px;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: rgba(220, 38, 38, 0.45);
-            animation: ping 1.4s cubic-bezier(0, 0, 0.2, 1) infinite;
-          "></div>
-        ` : ''}
+          <!-- Selection / Active Halo -->
+          ${isSelected ? `
+            <ellipse cx="34" cy="47" rx="30" ry="8" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-dasharray="4 2"/>
+          ` : ''}
+
+          <!-- Emergency Road Beacon Wave (when responding) -->
+          ${isEmergency ? `
+            <ellipse cx="34" cy="47" rx="32" ry="9" fill="none" stroke="#ef4444" stroke-width="2" opacity="0.8" style="animation: ping 1.4s infinite;"/>
+          ` : ''}
+
+          <!-- 2. 3D Wheels (Isometric angled tires) -->
+          <!-- Rear Left Wheel -->
+          <g>
+            <ellipse cx="20" cy="43" rx="5" ry="6" fill="#0f172a"/>
+            <ellipse cx="20" cy="43" rx="2.8" ry="3.5" fill="#94a3b8"/>
+            <ellipse cx="20" cy="43" rx="1.2" ry="1.5" fill="#334155"/>
+          </g>
+          <!-- Front Left Wheel -->
+          <g>
+            <ellipse cx="46" cy="40" rx="5" ry="6" fill="#0f172a"/>
+            <ellipse cx="46" cy="40" rx="2.8" ry="3.5" fill="#94a3b8"/>
+            <ellipse cx="46" cy="40" rx="1.2" ry="1.5" fill="#334155"/>
+          </g>
+          <!-- Front Right Wheel (tip under bumper) -->
+          <ellipse cx="55" cy="35" rx="3" ry="4" fill="#020617"/>
+
+          <!-- 3. 3D Van Chassis & Body -->
+          <!-- Side Patient Compartment Face -->
+          <path d="M10 28 L40 39 L40 19 L10 10 Z" fill="url(#bodySide-${cleanId})" stroke="#cbd5e1" stroke-width="0.5"/>
+          <!-- Front Cab & Bumper Face -->
+          <path d="M40 39 L57 32 L57 23 L47 16 L40 19 Z" fill="url(#bodyFront-${cleanId})" stroke="#94a3b8" stroke-width="0.5"/>
+          <!-- 3D Roof Face -->
+          <path d="M10 10 L40 19 L47 16 L22 7 Z" fill="#ffffff" stroke="#e2e8f0" stroke-width="0.5"/>
+          <!-- Aerodynamic Hood Slope -->
+          <path d="M40 24 L47 16 L57 23 L50 28 Z" fill="#cbd5e1" opacity="0.7"/>
+
+          <!-- 4. 3D Tinted Windows with Sky Reflections -->
+          <!-- Front Windshield -->
+          <path d="M42 19 L48 16.5 L55 22 L47 24 Z" fill="url(#glassGrad-${cleanId})" opacity="0.95"/>
+          <!-- Driver Side Window -->
+          <path d="M34 18 L39 20 L39 25 L34 23 Z" fill="url(#glassGrad-${cleanId})" opacity="0.85"/>
+          <!-- Rear Medical Windows -->
+          <path d="M14 12 L23 15.5 L23 21 L14 18 Z" fill="url(#glassGrad-${cleanId})" opacity="0.75"/>
+          <path d="M24 16 L32 18.5 L32 23.5 L24 21 Z" fill="url(#glassGrad-${cleanId})" opacity="0.75"/>
+
+          <!-- 5. Emergency Red Reflective Livery -->
+          <!-- Side Red Stripe -->
+          <path d="M10 24 L40 35 L40 38 L10 27 Z" fill="#dc2626"/>
+          <!-- Front Red Stripe -->
+          <path d="M40 35 L57 28.5 L57 30.5 L40 38 Z" fill="#b91c1c"/>
+          <!-- 3D Medical Cross on Side Panel -->
+          <g transform="translate(18, 14) skewY(19)">
+            <rect x="2.5" y="0" width="3" height="9" fill="#dc2626" rx="0.5"/>
+            <rect x="0" y="3" width="8" height="3" fill="#dc2626" rx="0.5"/>
+          </g>
+
+          <!-- 6. 3D Roof Emergency Lightbar -->
+          <path d="M26 7 L34 9.5 L32 11.5 L24 9 Z" fill="#1e293b"/>
+          <!-- Red Beacon -->
+          <ellipse cx="26" cy="8" rx="2.5" ry="1.8" fill="#ef4444"/>
+          <!-- Blue Beacon -->
+          <ellipse cx="32" cy="10" rx="2.5" ry="1.8" fill="#3b82f6"/>
+
+          <!-- Active Siren Pulse Aura when on trip -->
+          ${isEmergency ? `
+            <circle cx="26" cy="8" r="6" fill="#ef4444" opacity="0.6" style="animation: ping 1s infinite;"/>
+            <circle cx="32" cy="10" r="6" fill="#3b82f6" opacity="0.6" style="animation: ping 1s 0.5s infinite;"/>
+          ` : ''}
+
+          <!-- 7. Headlight & Tail Reflector -->
+          <polygon points="57,26 61,27.5 61,30.5 57,29" fill="#fef08a"/>
+          <polygon points="10,24 11,24.5 11,27 10,26.5" fill="#f97316"/>
+        </svg>
       </div>
     `,
-    iconSize: [115, 50],
-    iconAnchor: [57, 46],
-    popupAnchor: [0, -46]
+    iconSize: [68, 54],
+    iconAnchor: [34, 47],
+    popupAnchor: [0, -42]
   });
 };
 
