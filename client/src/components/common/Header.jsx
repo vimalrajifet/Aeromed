@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
-import { Bell, LogOut, Shield, User as UserIcon, Siren, Check, Edit3, X } from 'lucide-react';
+import { Bell, LogOut, Shield, User as UserIcon, Siren, Check, Edit3, X, ExternalLink } from 'lucide-react';
 
 export default function Header({ onToggleSidebar }) {
   const { user, logout, updateUserProfile } = useAuth();
@@ -84,6 +84,18 @@ export default function Header({ onToggleSidebar }) {
             </a>
           </>
         )}
+
+        {/* Live Demo Link */}
+        <a
+          href="https://demo-sigma-six-67.vercel.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-extrabold text-xs shadow-md shadow-indigo-500/20 transition-all transform hover:scale-105"
+          title="Open Live Demo Preview"
+        >
+          <ExternalLink className="w-3.5 h-3.5" />
+          <span>Demo</span>
+        </a>
 
         {/* Notification Bell */}
         <div className="relative">
