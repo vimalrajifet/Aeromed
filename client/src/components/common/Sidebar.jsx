@@ -31,7 +31,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen, onClose }) {
       id: 'sos-console',
       label: '🚨 SOS Dispatch Radar',
       icon: Radio,
-      roles: ['ADMIN', 'OPERATOR', 'FLEET_MGR']
+      roles: ['ADMIN', 'OPERATOR']
     },
     {
       id: 'emergencies',
