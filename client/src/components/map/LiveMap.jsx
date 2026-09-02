@@ -280,9 +280,9 @@ export default function LiveMap({
   }, [selectedAmbulance, selectedCase, ambulances]);
 
   // Determine patient coordinates
-  const patientLat = selectedCase?.pickupLatitude || (activeAmbulance ? activeAmbulance.currentLatitude + 0.025 : 13.0418);
-  const patientLng = selectedCase?.pickupLongitude || (activeAmbulance ? activeAmbulance.currentLongitude - 0.015 : 80.2341);
-  const patientLabel = selectedCase ? `Patient (${selectedCase.caseNumber})` : 'Patient Pickup';
+  const patientLat = selectedCase?.pickupLatitude || (activeAmbulance ? activeAmbulance.currentLatitude + 0.018 : 13.0418);
+  const patientLng = selectedCase?.pickupLongitude || (activeAmbulance ? activeAmbulance.currentLongitude - 0.014 : 80.2341);
+  const patientLabel = selectedCase ? `Patient (${selectedCase.caseNumber})` : (activeAmbulance ? `Emergency Target (${activeAmbulance.registrationNumber})` : 'Emergency Target');
 
   // Determine hospital coordinates
   const destinationHospital = useMemo(() => {
@@ -291,8 +291,20 @@ export default function LiveMap({
       const h = hospitals.find(h => h.id === selectedCase.destinationHospitalId);
       if (h) return h;
     }
+    if (hospitals.length > 0 && activeAmbulance) {
+      let best = hospitals[0];
+      let minD = Infinity;
+      hospitals.forEach(h => {
+        const d = Math.hypot(h.latitude - patientLat, h.longitude - patientLng);
+        if (d < minD) {
+          minD = d;
+          best = h;
+        }
+      });
+      return best;
+    }
     return hospitals[0] || null;
-  }, [selectedCase, hospitals]);
+  }, [selectedCase, hospitals, activeAmbulance, patientLat, patientLng]);
 
   const hospitalLat = destinationHospital?.latitude || 13.0604;
   const hospitalLng = destinationHospital?.longitude || 80.2496;
@@ -312,7 +324,7 @@ export default function LiveMap({
     source: 'Calculating...'
   });
 
-  // Calculate real road network routes only when user has touched a vehicle or case
+  // Calculate real road network routes immediately whenever user selects or changes vehicle/case
   useEffect(() => {
     let isCancelled = false;
 
@@ -353,8 +365,6 @@ export default function LiveMap({
   }, [
     hasUserSelection,
     activeAmbulance?.id,
-    activeAmbulance?.currentLatitude,
-    activeAmbulance?.currentLongitude,
     patientLat,
     patientLng,
     hospitalLat,

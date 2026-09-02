@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ambulanceApi, emergencyApi, hospitalApi } from '../api/endpoints';
 import LiveMap from '../components/map/LiveMap';
 import StatusBadge from '../components/common/StatusBadge';
@@ -27,6 +27,7 @@ export default function LiveTracking() {
   const [selectedCase, setSelectedCase] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(Date.now());
   const [isStale, setIsStale] = useState(false);
+  const lastUpdateRef = useRef(Date.now());
 
   const fetchTelematics = async () => {
     try {
@@ -41,16 +42,17 @@ export default function LiveTracking() {
       setAmbulances(ambList);
       setHospitals(hospRes.data.data);
       setCases(caseList);
-      setLastUpdate(Date.now());
+      const now = Date.now();
+      setLastUpdate(now);
+      lastUpdateRef.current = now;
       setIsStale(false);
 
       // Keep live coordinates synced if an ambulance was already selected by user
-      if (selectedAmbulance) {
-        const refreshed = ambList.find((a) => a.id === selectedAmbulance.id);
-        if (refreshed) {
-          setSelectedAmbulance(refreshed);
-        }
-      }
+      setSelectedAmbulance((prev) => {
+        if (!prev) return null;
+        const refreshed = ambList.find((a) => a.id === prev.id);
+        return refreshed || prev;
+      });
     } catch (err) {
       console.error('Failed to sync telematics:', err);
     }
@@ -66,16 +68,12 @@ export default function LiveTracking() {
 
     setSelectedAmbulance(amb);
 
-    // Look for an assigned case for this ambulance
-    let matchedCase = cases.find(
+    // Look for an active case specifically assigned to this ambulance
+    const matchedCase = cases.find(
       (c) => c.assignedAmbulanceId === amb.id && !['CLOSED', 'CANCELLED'].includes(c.status)
     );
 
-    // If none actively assigned, link with the most relevant open or active case
-    if (!matchedCase) {
-      matchedCase = cases.find((c) => !['CLOSED', 'CANCELLED'].includes(c.status)) || cases[0];
-    }
-
+    // If none assigned, set selectedCase to null so LiveMap generates a pickup for THIS ambulance
     setSelectedCase(matchedCase || null);
   };
 
@@ -109,7 +107,7 @@ export default function LiveTracking() {
 
     // Watchdog timer: alert if no updates received for >15 seconds
     const watchdog = setInterval(() => {
-      if (Date.now() - lastUpdate > 15000) {
+      if (Date.now() - lastUpdateRef.current > 15000) {
         setIsStale(true);
       }
     }, 3000);
@@ -118,7 +116,7 @@ export default function LiveTracking() {
       clearInterval(interval);
       clearInterval(watchdog);
     };
-  }, [lastUpdate]);
+  }, []);
 
   const hasSelection = !!(selectedAmbulance || selectedCase);
 
