@@ -40,12 +40,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen, onClose }) {
       icon: Radio,
       roles: ['ADMIN', 'OPERATOR']
     },
-    {
-      id: 'demo',
-      label: '🚁 Demo',
-      icon: Radio,
-      roles: ['ADMIN', 'OPERATOR']
-    },
+
     {
       id: 'emergencies',
       label: 'Emergency Cases',

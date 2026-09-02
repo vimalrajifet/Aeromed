@@ -82,16 +82,6 @@ export default function Header({ onToggleSidebar }) {
               <span className="w-2 h-2 rounded-full bg-white animate-ping" />
               <span>📱 Patient SOS</span>
             </a>
-
-            <a
-              href="/vimal/index.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-extrabold text-xs shadow-md shadow-cyan-500/20 hover:from-cyan-700 hover:to-blue-700 transition-all transform hover:scale-105"
-              title="Open Live Drone & Traffic Simulation Demo"
-            >
-              <span>🚁 Demo</span>
-            </a>
           </>
         )}
 
