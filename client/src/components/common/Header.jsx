@@ -71,16 +71,28 @@ export default function Header({ onToggleSidebar }) {
       <div className="flex items-center space-x-3">
         {/* Mobile SOS Phone App Direct Button (ADMIN & OPERATOR ONLY) */}
         {(user?.role === 'ADMIN' || user?.role === 'OPERATOR') && (
-          <a
-            href="/sos"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 text-white font-extrabold text-xs shadow-md shadow-red-500/20 hover:from-red-700 hover:to-rose-700 transition-all transform hover:scale-105"
-            title="Open Patient Mobile SOS Phone Screen"
-          >
-            <span className="w-2 h-2 rounded-full bg-white animate-ping" />
-            <span>📱 Patient SOS</span>
-          </a>
+          <>
+            <a
+              href="/sos"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 text-white font-extrabold text-xs shadow-md shadow-red-500/20 hover:from-red-700 hover:to-rose-700 transition-all transform hover:scale-105"
+              title="Open Patient Mobile SOS Phone Screen"
+            >
+              <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+              <span>📱 Patient SOS</span>
+            </a>
+
+            <a
+              href="/vimal"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-extrabold text-xs shadow-md shadow-cyan-500/20 hover:from-cyan-700 hover:to-blue-700 transition-all transform hover:scale-105"
+              title="Open Vimal Drone & Traffic Fleet Command"
+            >
+              <span>🚁 Vimal Command</span>
+            </a>
+          </>
         )}
 
         {/* Notification Bell */}

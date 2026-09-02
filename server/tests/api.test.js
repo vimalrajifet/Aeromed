@@ -261,6 +261,11 @@ describe('AeroMed Emergency Fleet Management - API Test Suite', () => {
 
     it('should successfully consume valid stock quantity and record transaction', async () => {
       const oxygenItem = await prisma.medicalItem.findUnique({ where: { itemCode: 'MED-OXY-01' } });
+      await prisma.ambulanceInventory.upsert({
+        where: { ambulanceId_medicalItemId: { ambulanceId: assignedAmbulanceId, medicalItemId: oxygenItem.id } },
+        update: { availableQuantity: { increment: 5 } },
+        create: { ambulanceId: assignedAmbulanceId, medicalItemId: oxygenItem.id, availableQuantity: 5 }
+      });
       const currentStock = await prisma.ambulanceInventory.findUnique({
         where: { ambulanceId_medicalItemId: { ambulanceId: assignedAmbulanceId, medicalItemId: oxygenItem.id } }
       });

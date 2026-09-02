@@ -19,6 +19,14 @@
       "destination": "/sos/index.html"
     },
     {
+      "source": "/vimal",
+      "destination": "/vimal/index.html"
+    },
+    {
+      "source": "/vimal/(.*)",
+      "destination": "/vimal/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
