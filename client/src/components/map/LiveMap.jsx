@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { getShortestRoadRoute } from '../../services/routingService';
-import { X } from 'lucide-react';
 
 // Custom SVG Markers
 const createVehicleIcon = (status, reg, isSelected) => {
@@ -199,77 +198,6 @@ export default function LiveMap({
 
   return (
     <div style={{ height }} className="relative w-full overflow-hidden rounded-3xl border border-slate-200 shadow-md">
-      {/* Floating Shortest Road Routing HUD / Legend (ONLY displayed after user touches a vehicle or case) */}
-      {hasUserSelection && activeAmbulance && (
-        <div className="absolute top-4 right-4 z-[400] bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-xl border border-slate-200 text-xs space-y-2.5 max-w-xs pointer-events-auto transition-all animate-in fade-in zoom-in-95">
-          <div className="flex items-center justify-between font-black text-slate-900 border-b border-slate-100 pb-1.5">
-            <div className="flex items-center space-x-1.5">
-              <span className="w-2 h-2 rounded-full bg-blue-600 animate-ping" />
-              <span>Shortest Road Corridors</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-[9px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-extrabold uppercase">
-                Dijkstra Road Graph
-              </span>
-              {onClearSelection && (
-                <button
-                  onClick={onClearSelection}
-                  className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-                  title="Hide Route Corridors"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Red Line Spec (Ambulance -> Patient) */}
-          <div className="flex items-start space-x-2">
-            <span className="w-3 h-3 rounded-full bg-red-600 mt-0.5 flex-shrink-0 animate-pulse" />
-            <div className="flex-1">
-              <div className="font-bold text-red-700">🔴 Red Route: Ambulance ➔ Patient</div>
-              <div className="text-slate-700 text-[11px] font-semibold mt-0.5">
-                Road Distance: <strong className="text-slate-950 font-black">{redRoute.distanceKm} km</strong> (~{redRoute.durationMins} mins)
-              </div>
-              <div className="text-[10px] text-slate-400">
-                Vehicle: {activeAmbulance.registrationNumber} ({redRoute.coordinates.length} waypoints)
-              </div>
-            </div>
-          </div>
-
-          {/* Green Line Spec (Patient -> Hospital) */}
-          <div className="flex items-start space-x-2 pt-1 border-t border-slate-100">
-            <span className="w-3 h-3 rounded-full bg-emerald-600 mt-0.5 flex-shrink-0" />
-            <div className="flex-1">
-              <div className="font-bold text-emerald-700">🟢 Green Route: Patient ➔ Hospital</div>
-              <div className="text-slate-700 text-[11px] font-semibold mt-0.5">
-                Road Distance: <strong className="text-slate-950 font-black">{greenRoute.distanceKm} km</strong> (~{greenRoute.durationMins} mins)
-              </div>
-              <div className="text-[10px] text-slate-400 truncate max-w-[200px]">
-                Dest: {destinationHospital?.name || 'Trauma Center'} ({greenRoute.coordinates.length} waypoints)
-              </div>
-            </div>
-          </div>
-
-          {/* Total Road Navigation Summary */}
-          <div className="pt-2 border-t border-slate-100 flex items-center justify-between font-bold text-slate-800 text-[11px]">
-            <span>Total Shortest Road:</span>
-            <span className="text-blue-600 font-black text-xs">
-              {Number((redRoute.distanceKm + greenRoute.distanceKm).toFixed(2))} km (~{redRoute.durationMins + greenRoute.durationMins}m)
-            </span>
-          </div>
-
-          {onClearSelection && (
-            <button
-              onClick={onClearSelection}
-              className="w-full mt-1 py-1 px-2 text-[10px] font-bold text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors text-center"
-            >
-              ✕ Hide Route Corridors
-            </button>
-          )}
-        </div>
-      )}
-
       <MapContainer
         center={center}
         zoom={zoom}
