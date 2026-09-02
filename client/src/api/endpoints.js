@@ -75,5 +75,6 @@ export const userApi = {
 export const sosApi = {
   createAlert: (data) => api.post('/sos/alert', data),
   broadcastToNearest: (caseId) => api.post(`/sos/broadcast/${caseId}`),
-  getStatus: (caseId) => api.get(`/sos/status/${caseId}`)
+  getStatus: (caseId) => api.get(`/sos/status/${caseId}`),
+  advanceMission: (caseId, payload) => api.post(`/sos/advance-mission/${caseId}`, payload)
 };

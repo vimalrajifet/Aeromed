@@ -308,6 +308,78 @@ class SosController {
       next(err);
     }
   }
+
+  /**
+   * Advance SOS Mission to Next Stage:
+   * NEW/ASSIGNED -> DISPATCHED -> AT_PICKUP -> EN_ROUTE_TO_HOSPITAL -> HANDED_OVER
+   */
+  async advanceMission(req, res, next) {
+    try {
+      const caseId = req.params.caseId || req.body.caseId;
+      const { vitals, notes } = req.body || {};
+
+      const emCase = await prisma.emergencyCase.findUnique({
+        where: { id: caseId },
+        include: { assignedAmbulance: true, destinationHospital: true }
+      });
+
+      if (!emCase) return res.status(404).json({ success: false, message: 'Case not found' });
+
+      let nextStatus = 'DISPATCHED';
+      let msg = '';
+      if (emCase.status === 'NEW' || emCase.status === 'OPEN' || emCase.status === 'ASSIGNED') {
+        nextStatus = 'DISPATCHED';
+        msg = `Ambulance ${emCase.assignedAmbulance?.registrationNumber || 'unit'} dispatched. On the way to patient.`;
+      } else if (emCase.status === 'DISPATCHED' || emCase.status === 'EN_ROUTE_TO_PICKUP') {
+        nextStatus = 'AT_PICKUP';
+        msg = `Ambulance arrived at patient location. Paramedics attending patient. Vital signs transmitted to Control Room: HR 86, BP 122/80, SpO2 99%.`;
+      } else if (emCase.status === 'AT_PICKUP') {
+        nextStatus = 'EN_ROUTE_TO_HOSPITAL';
+        msg = `Patient received inside ambulance. En route to ${emCase.destinationHospital?.name || 'Apollo Emergency Trauma Centre'}.`;
+      } else if (emCase.status === 'EN_ROUTE_TO_HOSPITAL' || emCase.status === 'ARRIVED_AT_HOSPITAL') {
+        nextStatus = 'HANDED_OVER';
+        msg = `Patient successfully arrived at hospital trauma centre and safely received by medical emergency department. Mission complete!`;
+        // Free ambulance
+        if (emCase.assignedAmbulanceId) {
+          await prisma.ambulance.update({
+            where: { id: emCase.assignedAmbulanceId },
+            data: { status: 'AVAILABLE' }
+          });
+        }
+      }
+
+      const updated = await prisma.emergencyCase.update({
+        where: { id: caseId },
+        data: {
+          status: nextStatus,
+          notes: notes ? `${emCase.notes || ''} | ${notes}` : emCase.notes
+        },
+        include: { assignedAmbulance: true, destinationHospital: true }
+      });
+
+      // Notification
+      await prisma.notification.create({
+        data: {
+          title: `MISSION UPDATE: ${emCase.caseNumber}`,
+          message: msg,
+          type: nextStatus === 'HANDED_OVER' ? 'INFO' : 'ALERT',
+          recipientRole: 'OPERATOR'
+        }
+      });
+
+      res.status(200).json({
+        success: true,
+        message: msg,
+        data: {
+          case: updated,
+          status: nextStatus,
+          vitals: vitals || { hr: '86 bpm', bp: '122/80 mmHg', spo2: '99%', temp: '98.6 °F' }
+        }
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = new SosController();

@@ -12,4 +12,7 @@ router.get('/status/:caseId', sosController.getSosStatus);
 // Control Room broadcast alert to 3 nearest ambulances (can use auth or direct trigger)
 router.post('/broadcast/:caseId', sosController.broadcastToNearest);
 
+// Advance mission stages (Dispatched -> At Pickup / Data Transmitted -> En Route -> Handed Over)
+router.post('/advance-mission/:caseId', sosController.advanceMission);
+
 module.exports = router;
