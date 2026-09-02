@@ -41,8 +41,8 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen, onClose }) {
       roles: ['ADMIN', 'OPERATOR']
     },
     {
-      id: 'vimal-command',
-      label: '🚁 Drone & Traffic Radar (Vimal)',
+      id: 'demo',
+      label: '🚁 Demo',
       icon: Radio,
       roles: ['ADMIN', 'OPERATOR']
     },

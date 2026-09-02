@@ -21,7 +21,7 @@ import Users from './pages/Users';
 import AuditLogs from './pages/AuditLogs';
 import SosConsole from './pages/SosConsole';
 import InnovationHub from './pages/InnovationHub';
-import VimalCommand from './pages/VimalCommand';
+import Demo from './pages/Demo';
 import AeroMedAssistant from './components/chat/AeroMedAssistant';
 
 function MainApp() {
@@ -86,8 +86,9 @@ function MainApp() {
         return <Analytics />;
       case 'innovation-hub':
         return <InnovationHub setActiveTab={setActiveTab} />;
+      case 'demo':
       case 'vimal-command':
-        return <VimalCommand />;
+        return <Demo />;
       case 'users':
         return <Users />;
       case 'audit-logs':

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { ExternalLink, RefreshCw, Maximize2, Shield, Radio, Plane, Activity } from 'lucide-react';
+import { ExternalLink, RefreshCw, Maximize2, Radio } from 'lucide-react';
 
-export default function VimalCommand() {
+export default function Demo() {
   const [iframeKey, setIframeKey] = useState(Date.now());
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -24,14 +24,14 @@ export default function VimalCommand() {
           <div>
             <div className="flex items-center space-x-2">
               <h1 className="text-xl font-black text-slate-900 tracking-tight">
-                Vimal Drone & Fleet Command Center
+                Demo
               </h1>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200">
                 ADMIN & OPERATOR ONLY
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Integrated real-time drone telemetry, traffic signal grid control, and quadrotor simulation.
+              Live drone telemetry, traffic signal grid control, and quadrotor simulation demo.
             </p>
           </div>
         </div>
@@ -40,7 +40,7 @@ export default function VimalCommand() {
           <button
             onClick={handleRefresh}
             className="inline-flex items-center space-x-1.5 px-3.5 py-2 text-xs font-bold rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 transition-colors"
-            title="Reload drone simulation view"
+            title="Reload simulation view"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Reload</span>
@@ -66,12 +66,15 @@ export default function VimalCommand() {
         </div>
       </div>
 
-      {/* Embedded Vimal Application Frame */}
-      <div className="w-full bg-slate-950 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden relative" style={{ height: isFullscreen ? 'calc(100vh - 100px)' : 'calc(100vh - 230px)', minHeight: '620px' }}>
+      {/* Embedded Application Frame */}
+      <div
+        className="w-full bg-slate-950 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden relative"
+        style={{ height: isFullscreen ? 'calc(100vh - 100px)' : 'calc(100vh - 230px)', minHeight: '620px' }}
+      >
         <iframe
           key={iframeKey}
           src="/vimal"
-          title="Vimal Drone & Traffic Fleet Command"
+          title="Demo"
           className="w-full h-full border-0"
           allow="geolocation; accelerometer; gyroscope; fullscreen"
         />

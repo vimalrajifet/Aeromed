@@ -88,9 +88,9 @@ export default function Header({ onToggleSidebar }) {
               target="_blank"
               rel="noopener noreferrer"
               className="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-extrabold text-xs shadow-md shadow-cyan-500/20 hover:from-cyan-700 hover:to-blue-700 transition-all transform hover:scale-105"
-              title="Open Vimal Drone & Traffic Fleet Command"
+              title="Open Live Drone & Traffic Simulation Demo"
             >
-              <span>🚁 Vimal Command</span>
+              <span>🚁 Demo</span>
             </a>
           </>
         )}
