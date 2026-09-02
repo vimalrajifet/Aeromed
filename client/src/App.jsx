@@ -32,6 +32,8 @@ function MainApp() {
         setActiveTab('driver-portal');
       } else if (user.role === 'HOSPITAL_COORD') {
         setActiveTab('hospital-portal');
+      } else if (user.role === 'INVENTORY_MGR') {
+        setActiveTab('inventory');
       } else {
         setActiveTab('dashboard');
       }

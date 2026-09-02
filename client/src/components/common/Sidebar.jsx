@@ -25,7 +25,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen, onClose }) {
       id: 'dashboard',
       label: 'Control Room',
       icon: LayoutDashboard,
-      roles: ['ADMIN', 'OPERATOR', 'FLEET_MGR', 'INVENTORY_MGR', 'HOSPITAL_COORD']
+      roles: ['ADMIN', 'OPERATOR', 'FLEET_MGR', 'HOSPITAL_COORD']
     },
     {
       id: 'sos-console',
