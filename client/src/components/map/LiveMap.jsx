@@ -309,6 +309,28 @@ export default function LiveMap({
   const hospitalLat = destinationHospital?.latitude || 13.0604;
   const hospitalLng = destinationHospital?.longitude || 80.2496;
 
+  // For ALS units: ALS always starts stationed at the hospital to acquire the patient and return to hospital
+  const isALS = activeAmbulance?.ambulanceType === 'ALS';
+
+  // Base Hospital for ALS: find closest hospital or destination hospital
+  const baseHospital = useMemo(() => {
+    if (!isALS || hospitals.length === 0) return null;
+    let closest = hospitals[0];
+    let minD = Infinity;
+    hospitals.forEach(h => {
+      const d = Math.hypot(h.latitude - (activeAmbulance?.currentLatitude || 0), h.longitude - (activeAmbulance?.currentLongitude || 0));
+      if (d < minD) {
+        minD = d;
+        closest = h;
+      }
+    });
+    return closest;
+  }, [isALS, hospitals, activeAmbulance]);
+
+  // If ALS, the starting point of the ambulance is the hospital base
+  const ambStartLat = isALS && baseHospital ? baseHospital.latitude : (activeAmbulance?.currentLatitude || 13.0604);
+  const ambStartLng = isALS && baseHospital ? baseHospital.longitude : (activeAmbulance?.currentLongitude || 80.2496);
+
   // State to hold computed real road network routes
   const [redRoute, setRedRoute] = useState({
     coordinates: [],
@@ -335,10 +357,10 @@ export default function LiveMap({
     }
 
     async function computeRoutes() {
-      // 1. Red Route: Ambulance to Patient (Road Network)
+      // 1. Red Route: Ambulance (starts at Hospital for ALS) to Patient (Road Network)
       const red = await getShortestRoadRoute(
-        activeAmbulance.currentLatitude,
-        activeAmbulance.currentLongitude,
+        ambStartLat,
+        ambStartLng,
         patientLat,
         patientLng
       );
@@ -365,6 +387,8 @@ export default function LiveMap({
   }, [
     hasUserSelection,
     activeAmbulance?.id,
+    ambStartLat,
+    ambStartLng,
     patientLat,
     patientLng,
     hospitalLat,
@@ -410,7 +434,7 @@ export default function LiveMap({
           >
             <Tooltip permanent={false} sticky>
               <div className="text-xs p-1">
-                <p className="font-black text-red-600">🔴 Shortest Road Route (Ambulance ➔ Patient)</p>
+                <p className="font-black text-red-600">🔴 Shortest Road Route ({isALS ? 'Hospital Base ➔ Patient' : 'Ambulance ➔ Patient'})</p>
                 <p className="text-slate-700">Distance: <strong>{redRoute.distanceKm} km</strong> (~{redRoute.durationMins} mins)</p>
                 <p className="text-[10px] text-slate-400">Road Path: {redRoute.source}</p>
               </div>

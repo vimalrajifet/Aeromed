@@ -238,6 +238,11 @@ export default function LiveTracking() {
                   <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-100 text-[11px] text-slate-600">
                     <div>Grade: <strong className="text-slate-800">{amb.ambulanceType}</strong></div>
                     <div>Fuel: <strong className="text-slate-800">{amb.fuelLevel}%</strong></div>
+                    {amb.ambulanceType === 'ALS' && (
+                      <div className="col-span-2 text-[10px] text-emerald-700 font-bold bg-emerald-50/80 px-2 py-0.5 rounded-lg border border-emerald-200/60 flex items-center space-x-1">
+                        <span>🏥 Starts at Hospital Base (Deploy ➔ Patient ➔ Hospital)</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="mt-2 pt-2 border-t border-slate-100 text-[10px] font-bold flex items-center justify-between">

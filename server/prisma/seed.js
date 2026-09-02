@@ -75,13 +75,13 @@ async function main() {
     })
   ]);
 
-  console.log('--- Seeding Ambulances (5 Vehicles with TN Registration) ---');
+  console.log('--- Seeding Ambulances (15 Vehicles: ALS Stationed at Hospitals + BLS Fleet) ---');
   const ambulances = await Promise.all([
     prisma.ambulance.create({
       data: {
         id: 'amb-001',
         registrationNumber: 'TN-01-EM-1001',
-        ambulanceType: 'ALS', // Advanced Life Support
+        ambulanceType: 'ALS', // Advanced Life Support - Apollo Hospital
         currentLatitude: 13.0604,
         currentLongitude: 80.2496,
         fuelLevel: 92.5,
@@ -109,9 +109,9 @@ async function main() {
       data: {
         id: 'amb-003',
         registrationNumber: 'TN-02-EM-2001',
-        ambulanceType: 'ALS',
-        currentLatitude: 13.0850,
-        currentLongitude: 80.2101, // Anna Nagar
+        ambulanceType: 'ALS', // Rajiv Gandhi Govt Hospital Base
+        currentLatitude: 13.0818,
+        currentLongitude: 80.2773,
         fuelLevel: 78.0,
         status: 'AVAILABLE',
         odometerReading: 31400.0,
@@ -145,6 +145,128 @@ async function main() {
         odometerReading: 61200.0,
         lastServiceDate: new Date('2026-05-10'),
         nextServiceDate: new Date('2026-08-10')
+      }
+    }),
+    // 8 Additional BLS Units
+    prisma.ambulance.create({
+      data: {
+        id: 'amb-006',
+        registrationNumber: 'TN-04-EM-4001',
+        ambulanceType: 'BLS',
+        currentLatitude: 13.0784,
+        currentLongitude: 80.2608, // Egmore
+        fuelLevel: 90.0,
+        status: 'AVAILABLE',
+        odometerReading: 16500.0
+      }
+    }),
+    prisma.ambulance.create({
+      data: {
+        id: 'amb-007',
+        registrationNumber: 'TN-04-EM-4002',
+        ambulanceType: 'BLS',
+        currentLatitude: 13.0333,
+        currentLongitude: 80.2667, // Mylapore
+        fuelLevel: 82.0,
+        status: 'AVAILABLE',
+        odometerReading: 19800.0
+      }
+    }),
+    prisma.ambulance.create({
+      data: {
+        id: 'amb-008',
+        registrationNumber: 'TN-05-EM-5001',
+        ambulanceType: 'BLS',
+        currentLatitude: 12.9815,
+        currentLongitude: 80.2180, // Velachery
+        fuelLevel: 88.0,
+        status: 'AVAILABLE',
+        odometerReading: 24300.0
+      }
+    }),
+    prisma.ambulance.create({
+      data: {
+        id: 'amb-009',
+        registrationNumber: 'TN-05-EM-5002',
+        ambulanceType: 'BLS',
+        currentLatitude: 12.9249,
+        currentLongitude: 80.1000, // Tambaram
+        fuelLevel: 75.0,
+        status: 'AVAILABLE',
+        odometerReading: 35600.0
+      }
+    }),
+    prisma.ambulance.create({
+      data: {
+        id: 'amb-010',
+        registrationNumber: 'TN-06-EM-6001',
+        ambulanceType: 'BLS',
+        currentLatitude: 13.0382,
+        currentLongitude: 80.1565, // Porur
+        fuelLevel: 95.0,
+        status: 'AVAILABLE',
+        odometerReading: 12100.0
+      }
+    }),
+    prisma.ambulance.create({
+      data: {
+        id: 'amb-011',
+        registrationNumber: 'TN-06-EM-6002',
+        ambulanceType: 'BLS',
+        currentLatitude: 13.0500,
+        currentLongitude: 80.2121, // Vadapalani
+        fuelLevel: 80.0,
+        status: 'AVAILABLE',
+        odometerReading: 28900.0
+      }
+    }),
+    prisma.ambulance.create({
+      data: {
+        id: 'amb-012',
+        registrationNumber: 'TN-07-EM-7001',
+        ambulanceType: 'BLS',
+        currentLatitude: 13.0012,
+        currentLongitude: 80.2565, // Adyar
+        fuelLevel: 86.0,
+        status: 'AVAILABLE',
+        odometerReading: 21400.0
+      }
+    }),
+    prisma.ambulance.create({
+      data: {
+        id: 'amb-013',
+        registrationNumber: 'TN-07-EM-7002',
+        ambulanceType: 'BLS',
+        currentLatitude: 13.0536,
+        currentLongitude: 80.2642, // Royapettah
+        fuelLevel: 91.0,
+        status: 'AVAILABLE',
+        odometerReading: 15700.0
+      }
+    }),
+    // 2 Additional ALS Units Stationed Always at Hospital Base
+    prisma.ambulance.create({
+      data: {
+        id: 'amb-014',
+        registrationNumber: 'TN-08-EM-8001',
+        ambulanceType: 'ALS',
+        currentLatitude: 13.0232,
+        currentLongitude: 80.1784, // MIOT Trauma Hospital
+        fuelLevel: 98.0,
+        status: 'AVAILABLE',
+        odometerReading: 8900.0
+      }
+    }),
+    prisma.ambulance.create({
+      data: {
+        id: 'amb-015',
+        registrationNumber: 'TN-08-EM-8002',
+        ambulanceType: 'ALS',
+        currentLatitude: 13.0067,
+        currentLongitude: 80.2575, // Fortis Malar Hospital
+        fuelLevel: 96.0,
+        status: 'AVAILABLE',
+        odometerReading: 9400.0
       }
     })
   ]);
