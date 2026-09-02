@@ -1,0 +1,258 @@
+// Prisma schema for AeroMed Emergency Fleet Management
+// Designed for local SQLite development with modular architecture ready for SAP HANA Cloud / CAP migration
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String    @id @default(uuid())
+  username     String    @unique
+  passwordHash String
+  name         String
+  role         String    // ADMIN, OPERATOR, DRIVER, MEDICAL_TEAM, HOSPITAL_COORD, FLEET_MGR, INVENTORY_MGR
+  phone        String?
+  email        String?
+  employeeId   String?   @unique
+  employee     Employee? @relation(fields: [employeeId], references: [id])
+  hospitalId   String?
+  hospital     Hospital? @relation(fields: [hospitalId], references: [id])
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  auditLogs     AuditLog[]
+  notifications Notification[]
+}
+
+model EmergencyCase {
+  id                    String    @id @default(uuid())
+  caseNumber            String    @unique // e.g. EMG-2026-0001
+  callerName            String
+  callerPhone           String
+  emergencyType         String    // TRAUMA, CARDIAC, RESPIRATORY, STROKE, MATERNITY, ACCIDENT, GENERAL
+  priority              String    // P1_CRITICAL, P2_HIGH, P3_MEDIUM, P4_LOW
+  description           String?
+  pickupAddress         String
+  pickupLatitude        Float
+  pickupLongitude       Float
+  destinationHospitalId String?
+  destinationHospital   Hospital? @relation(fields: [destinationHospitalId], references: [id])
+  assignedAmbulanceId   String?
+  assignedAmbulance     Ambulance? @relation(fields: [assignedAmbulanceId], references: [id])
+  status                String    @default("OPEN") // OPEN, ASSIGNED, DISPATCHED, EN_ROUTE_TO_PICKUP, AT_PICKUP, EN_ROUTE_TO_HOSPITAL, ARRIVED_AT_HOSPITAL, HANDED_OVER, CLOSED, CANCELLED
+  createdAt             DateTime  @default(now())
+  dispatchedAt          DateTime?
+  arrivedAt             DateTime?
+  completedAt           DateTime?
+
+  crewAssignments       CrewAssignment[]
+  hospitalAlerts        HospitalAlert[]
+  locationHistory       LocationHistory[]
+  inventoryTransactions InventoryTransaction[]
+}
+
+model Ambulance {
+  id                 String    @id @default(uuid())
+  registrationNumber String    @unique // e.g. TN-01-EM-1001
+  ambulanceType      String    // ALS, BLS, PATIENT_TRANSPORT
+  currentLatitude    Float
+  currentLongitude   Float
+  fuelLevel          Float     @default(100.0) // 0-100%
+  status             String    @default("AVAILABLE") // AVAILABLE, ASSIGNED, ON_TRIP, MAINTENANCE, OFFLINE
+  lastServiceDate    DateTime?
+  nextServiceDate    DateTime?
+  odometerReading    Float     @default(0.0)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  assignedCases      EmergencyCase[]
+  crewAssignments    CrewAssignment[]
+  inventory          AmbulanceInventory[]
+  maintenanceOrders  MaintenanceOrder[]
+  locationHistory    LocationHistory[]
+  transactions       InventoryTransaction[]
+}
+
+model Employee {
+  id                 String    @id @default(uuid())
+  employeeCode       String    @unique // e.g. EMP-TN-101
+  name               String
+  role               String    // DRIVER, PARAMEDIC, EMT, DOCTOR
+  phone              String
+  skills             String    // JSON or comma separated: CPR, ALS, TRAUMA, AIRWAY
+  shift              String    @default("MORNING") // MORNING, EVENING, NIGHT
+  availabilityStatus String    @default("AVAILABLE") // AVAILABLE, ASSIGNED, OFF_DUTY, ON_LEAVE
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  user               User?
+  crewAssignments    CrewAssignment[]
+}
+
+model CrewAssignment {
+  id              String        @id @default(uuid())
+  emergencyCaseId String
+  emergencyCase   EmergencyCase @relation(fields: [emergencyCaseId], references: [id], onDelete: Cascade)
+  ambulanceId     String
+  ambulance       Ambulance     @relation(fields: [ambulanceId], references: [id])
+  employeeId      String
+  employee        Employee      @relation(fields: [employeeId], references: [id])
+  roleInCase      String        // PRIMARY_DRIVER, LEAD_PARAMEDIC, SUPPORT_EMT
+  assignedAt      DateTime      @default(now())
+  releasedAt      DateTime?
+
+  @@index([emergencyCaseId])
+  @@index([ambulanceId])
+  @@index([employeeId])
+}
+
+model Hospital {
+  id                   String          @id @default(uuid())
+  name                 String
+  address              String
+  latitude             Float
+  longitude            Float
+  contactNumber        String
+  availableDepartments String          // CARDIOLOGY, TRAUMA_CARE, ICU, NEUROLOGY, PEDIATRICS
+  availabilityStatus   String          @default("ACCEPTING") // ACCEPTING, FULL, DIVERTING
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+
+  emergencyCases       EmergencyCase[]
+  hospitalAlerts       HospitalAlert[]
+  users                User[]
+}
+
+model HospitalAlert {
+  id                   String        @id @default(uuid())
+  emergencyCaseId      String
+  emergencyCase        EmergencyCase @relation(fields: [emergencyCaseId], references: [id], onDelete: Cascade)
+  hospitalId           String
+  hospital             Hospital      @relation(fields: [hospitalId], references: [id])
+  emergencyCategory    String
+  requiredDepartment   String
+  estimatedArrivalTime DateTime?
+  status               String        @default("SENT") // SENT, ACKNOWLEDGED, PREPARING, REJECTED
+  sentAt               DateTime      @default(now())
+  acknowledgedAt       DateTime?
+  notes                String?
+
+  @@index([emergencyCaseId])
+  @@index([hospitalId])
+}
+
+model MedicalItem {
+  id                   String               @id @default(uuid())
+  itemCode             String               @unique // e.g. MED-OXY-01
+  name                 String
+  category             String               // PHARMACEUTICAL, EQUIPMENT, CONSUMABLE
+  unit                 String               // CYLINDER, VIAL, PACK, BOX, PIECE
+  minimumQuantity      Int                  @default(5)
+  expiryControlled     Boolean              @default(false)
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  ambulanceInventories AmbulanceInventory[]
+  transactions         InventoryTransaction[]
+}
+
+model AmbulanceInventory {
+  id                String      @id @default(uuid())
+  ambulanceId       String
+  ambulance         Ambulance   @relation(fields: [ambulanceId], references: [id], onDelete: Cascade)
+  medicalItemId     String
+  medicalItem       MedicalItem @relation(fields: [medicalItemId], references: [id])
+  availableQuantity Int         @default(0)
+  expiryDate        DateTime?
+
+  @@unique([ambulanceId, medicalItemId])
+  @@index([ambulanceId])
+  @@index([medicalItemId])
+}
+
+model InventoryTransaction {
+  id              String         @id @default(uuid())
+  ambulanceId     String
+  ambulance       Ambulance      @relation(fields: [ambulanceId], references: [id])
+  medicalItemId   String
+  medicalItem     MedicalItem    @relation(fields: [medicalItemId], references: [id])
+  emergencyCaseId String?
+  emergencyCase   EmergencyCase? @relation(fields: [emergencyCaseId], references: [id])
+  transactionType String         // CONSUMPTION, REPLENISHMENT, DISPOSAL_EXPIRED
+  quantity        Int
+  performedBy     String
+  timestamp       DateTime       @default(now())
+  remarks         String?
+
+  @@index([ambulanceId])
+  @@index([medicalItemId])
+  @@index([emergencyCaseId])
+}
+
+model MaintenanceOrder {
+  id               String    @id @default(uuid())
+  orderNumber      String    @unique // e.g. WO-2026-001
+  ambulanceId      String
+  ambulance        Ambulance @relation(fields: [ambulanceId], references: [id])
+  maintenanceType  String    // SCHEDULED_SERVICE, BREAKDOWN_REPAIR, BRAKE_INSPECTION, TYRE_REPLACEMENT, ELECTRICAL
+  issueDescription String
+  priority         String    @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  scheduledDate    DateTime?
+  completedDate    DateTime?
+  status           String    @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, CANCELLED
+  technicianNotes  String?
+  performedBy      String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([ambulanceId])
+}
+
+model LocationHistory {
+  id              String         @id @default(uuid())
+  ambulanceId     String
+  ambulance       Ambulance      @relation(fields: [ambulanceId], references: [id], onDelete: Cascade)
+  emergencyCaseId String?
+  emergencyCase   EmergencyCase? @relation(fields: [emergencyCaseId], references: [id])
+  latitude        Float
+  longitude       Float
+  speed           Float          @default(0.0) // km/h
+  recordedAt      DateTime       @default(now())
+
+  @@index([ambulanceId])
+  @@index([emergencyCaseId])
+}
+
+model Notification {
+  id            String   @id @default(uuid())
+  recipientRole String?  // Specific role or null for broad broadcasts
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+  title         String
+  message       String
+  type          String   @default("INFO") // INFO, WARNING, ALERT, CRITICAL
+  isRead        Boolean  @default(false)
+  createdAt     DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  userRole   String?
+  action     String   // e.g. LOGIN, CASE_CREATED, DISPATCHED, STATUS_CHANGED, STOCK_CONSUMED
+  entityType String   // EmergencyCase, Ambulance, Inventory, Maintenance, User
+  entityId   String?
+  details    String?  // JSON string
+  ipAddress  String?
+  timestamp  DateTime @default(now())
+
+  @@index([userId])
+  @@index([entityType, entityId])
+}

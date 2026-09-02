@@ -1,0 +1,40 @@
+{
+  "name": "aeromed-emergency-fleet-management",
+  "version": "1.0.0",
+  "description": "AeroMed Emergency Fleet Management - SAP Architecture MVP Prototype",
+  "scripts": {
+    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"cyan,magenta\" \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "start:server": "cd server && npm start",
+    "seed": "cd server && npm run seed",
+    "test": "cd server && npm test",
+    "build:client": "cd client && npm run build",
+    "build:server": "npx prisma generate --schema=./server/prisma/schema.prisma",
+    "vercel-build": "npm run build:server && npm run build:client"
+  },
+  "keywords": [
+    "emergency-fleet-management",
+    "sap-cap",
+    "sap-s4hana",
+    "sap-mm",
+    "sap-pm",
+    "telematics",
+    "ambulance-dispatch"
+  ],
+  "author": "AeroMed Healthcare Architecture Team",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "prisma": "^5.22.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "jsonwebtoken": "^9.0.3"
+  }
+}
