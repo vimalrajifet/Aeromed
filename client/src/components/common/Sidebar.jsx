@@ -14,7 +14,8 @@ import {
   FileText,
   UserCheck,
   Send,
-  Navigation
+  Navigation,
+  Sparkles
 } from 'lucide-react';
 
 export default function Sidebar({ activeTab, setActiveTab, isOpen, onClose }) {
@@ -26,6 +27,12 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen, onClose }) {
       label: 'Control Room',
       icon: LayoutDashboard,
       roles: ['ADMIN', 'OPERATOR', 'FLEET_MGR', 'HOSPITAL_COORD']
+    },
+    {
+      id: 'innovation-hub',
+      label: '✨ Innovation Centre',
+      icon: Sparkles,
+      roles: ['ADMIN', 'OPERATOR', 'FLEET_MGR', 'INVENTORY_MGR', 'HOSPITAL_COORD']
     },
     {
       id: 'sos-console',

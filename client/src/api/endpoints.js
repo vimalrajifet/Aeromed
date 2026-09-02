@@ -78,3 +78,30 @@ export const sosApi = {
   getStatus: (caseId) => api.get(`/sos/status/${caseId}`),
   advanceMission: (caseId, payload) => api.post(`/sos/advance-mission/${caseId}`, payload)
 };
+
+export const chatbotApi = {
+  sendMessage: (payload) => api.post('/chatbot/message', payload),
+  getHistory: (conversationId) => api.get(`/chatbot/history/${conversationId}`)
+};
+
+export const innovationApi = {
+  getReadinessScores: () => api.get('/innovation/readiness'),
+  getReadinessDetails: (id) => api.get(`/innovation/readiness/${id}`),
+  getHospitalRecommendations: (caseId) => api.get(`/innovation/hospital-recommendations/${caseId}`),
+  getDemandForecast: () => api.get('/innovation/demand-forecast'),
+  getStandbyRecommendations: () => api.get('/innovation/standby-recommendations'),
+  approveStandby: (id) => api.post(`/innovation/standby-recommendations/${id}/approve`),
+  getRedistributionRecommendations: () => api.get('/innovation/inventory/redistribution-recommendations'),
+  approveInventoryTransfer: (id, payload) => api.post(`/innovation/inventory/transfers/${id}/approve`, payload),
+  createSanitisationTask: (payload) => api.post('/innovation/sanitisation/tasks', payload),
+  updateSanitisationTask: (id, payload) => api.patch(`/innovation/sanitisation/tasks/${id}`, payload),
+  getPostEmergencyReport: (caseId) => api.get(`/innovation/reports/cases/${caseId}`),
+  getIncidents: () => api.get('/innovation/incidents'),
+  createIncident: (payload) => api.post('/innovation/incidents', payload),
+  assignIncidentResources: (id, payload) => api.post(`/innovation/incidents/${id}/assign-resources`, payload)
+};
+
+export const syncApi = {
+  syncEvents: (events) => api.post('/sync/events', { events })
+};
+

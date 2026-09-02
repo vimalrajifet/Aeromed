@@ -1,4 +1,5 @@
 const prisma = require('../config/prisma');
+const readinessEngine = require('./readinessEngine');
 
 /**
  * Rule-Based Ambulance & Crew Allocation Engine
@@ -72,9 +73,12 @@ class AllocationEngine {
     const availableDrivers = availableEmployees.filter(e => e.role === 'DRIVER');
     const availableMedical = availableEmployees.filter(e => ['DOCTOR', 'PARAMEDIC', 'EMT'].includes(e.role));
 
-    // 3. Score each candidate ambulance
-    const scoredCandidates = candidateAmbulances.map(ambulance => {
-      // Factor 1: Distance (40% weight)
+    // 3. Score each candidate ambulance with Readiness Intelligence
+    const scoredCandidates = await Promise.all(candidateAmbulances.map(async (ambulance) => {
+      // Innovation 2: Ambulance Readiness Assessment (0 to 100)
+      const readiness = await readinessEngine.assessAmbulance(ambulance.id);
+
+      // Factor 1: Distance (30% weight)
       const distanceKm = calculateHaversineDistance(
         ambulance.currentLatitude,
         ambulance.currentLongitude,
@@ -84,7 +88,7 @@ class AllocationEngine {
       // Linear falloff: 0km = 100pts, 10km = 0pts
       const distanceScore = Math.max(0, Math.min(100, Math.round(100 - (distanceKm * 10))));
 
-      // Factor 2: Ambulance Type Suitability (25% weight)
+      // Factor 2: Ambulance Type Suitability (20% weight)
       let typeScore = 70;
       if (['P1_CRITICAL', 'CARDIAC', 'STROKE', 'TRAUMA'].includes(priority) || ['CARDIAC', 'STROKE', 'TRAUMA'].includes(emergencyType)) {
         if (ambulance.ambulanceType === 'ALS') typeScore = 100;
@@ -101,7 +105,7 @@ class AllocationEngine {
         else typeScore = 75;
       }
 
-      // Factor 3: Crew Availability (20% weight)
+      // Factor 3: Crew Availability (15% weight)
       let crewScore = 0;
       let suggestedDriver = availableDrivers[0] || null;
       let suggestedMedical = null;
@@ -125,7 +129,6 @@ class AllocationEngine {
       }
 
       // Factor 4: Essential Equipment Availability (15% weight)
-      // Check for oxygen and basic supplies
       let equipmentScore = 100;
       const oxygenStock = ambulance.inventory.find(inv => inv.medicalItem.itemCode === 'MED-OXY-01');
       if (!oxygenStock || oxygenStock.availableQuantity < 1) {
@@ -139,26 +142,38 @@ class AllocationEngine {
       }
       equipmentScore = Math.max(0, equipmentScore);
 
-      // Weighted Total Score: Distance (40%) + Type (25%) + Crew (20%) + Equipment (15%)
+      // Factor 5: Comprehensive Readiness Score (20% weight)
+      const readinessWeightScore = readiness.overallScore;
+
+      // Weighted Total Score: Distance (30%) + Type (20%) + Crew (15%) + Equipment (15%) + Readiness (20%)
       const totalScore = Number((
-        (distanceScore * 0.40) +
-        (typeScore * 0.25) +
-        (crewScore * 0.20) +
-        (equipmentScore * 0.15)
+        (distanceScore * 0.30) +
+        (typeScore * 0.20) +
+        (crewScore * 0.15) +
+        (equipmentScore * 0.15) +
+        (readinessWeightScore * 0.20)
       ).toFixed(1));
 
       // Estimated arrival time assuming average city speed of 35 km/h
       const estimatedMinutes = Math.max(2, Math.round((distanceKm / 35) * 60));
 
+      // Rule: Vehicles categorized as NOT_READY cannot be recommended
+      const eligibleForRecommendation = readiness.category !== 'NOT_READY';
+
       return {
         ambulance,
         distanceKm: Number(distanceKm.toFixed(2)),
         estimatedMinutes,
+        readinessScore: readiness.overallScore,
+        readinessCategory: readiness.category,
+        readinessFactors: readiness.factors,
+        eligibleForRecommendation,
         scores: {
           distanceScore,
           typeScore,
           crewScore,
           equipmentScore,
+          readinessScore: readiness.overallScore,
           totalScore
         },
         suggestedCrew: {
@@ -166,13 +181,20 @@ class AllocationEngine {
           medicalOfficer: suggestedMedical
         }
       };
+    }));
+
+    // Sort descending by total score, placing eligible units first
+    scoredCandidates.sort((a, b) => {
+      if (a.eligibleForRecommendation !== b.eligibleForRecommendation) {
+        return a.eligibleForRecommendation ? -1 : 1;
+      }
+      return b.scores.totalScore - a.scores.totalScore;
     });
 
-    // Sort descending by total score
-    scoredCandidates.sort((a, b) => b.scores.totalScore - a.scores.totalScore);
+    const recommended = scoredCandidates.find(c => c.eligibleForRecommendation) || scoredCandidates[0] || null;
 
     return {
-      recommended: scoredCandidates[0] || null,
+      recommended,
       candidates: scoredCandidates,
       calculatedAt: new Date().toISOString()
     };

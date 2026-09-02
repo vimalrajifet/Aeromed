@@ -66,5 +66,7 @@ function authorizeRoles(...allowedRoles) {
 
 module.exports = {
   authenticateJWT,
-  authorizeRoles
+  authorizeRoles,
+  authMiddleware: authenticateJWT,
+  requireRole: authorizeRoles
 };

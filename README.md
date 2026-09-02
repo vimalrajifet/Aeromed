@@ -54,6 +54,23 @@ Every main user role has a pre-configured account with fictional credentials for
 
 ---
 
+## ✨ 10 AeroMed Next-Gen Innovations (Innovation Centre)
+
+Accessible via the **`✨ Innovation Centre`** in the application and via the floating **`AeroMed AI Assistant`**:
+
+1. **AeroMed AI Assistant:** Bilingual English & தமிழ் natural language chatbot with strict read-only authorized API calls, clinical safety disclaimers, operator confirmation dialog, and GRC audit logging.
+2. **Ambulance Readiness Intelligence:** Weighted 0–100 score across 6 operational dimensions (Vehicle 25%, Medical Inventory 25%, Fuel 15%, Crew 20%, Sanitisation 10%, GPS 5%). Automatically excludes `NOT_READY` or maintenance vehicles from dispatch recommendations.
+3. **Intelligent Hospital Recommendation:** Multi-factor clinical allocation (Department Match 30%, Bed Capacity 25%, ETA 25%, Emergency Workload 15%, Historical Ack Speed 5%). Returns top 3 recommendations with explainable reasoning tags.
+4. **Emergency Demand Forecasting:** Double Exponential Smoothing statistical time-series model forecasting 24-hour hourly curves, day-of-week trends, and Chennai geographic cluster heatmaps, evaluated against a 7-day moving average baseline with MSE/MAE metrics.
+5. **Dynamic Standby Recommendation:** Suggests proactive ambulance staging locations based on predicted demand zones with fleet manager approval workflows.
+6. **Offline Emergency Data Synchronisation:** Idempotent client-side IndexedDB queue buffering telemetry and status updates during connectivity blackouts, auto-syncing upon network return with UUIDv4 deduplication.
+7. **Medicine Expiry & Smart Redistribution:** Proactive cross-fleet transfer engine identifying near-expiry and deficit supplies, rebalancing stocks prior to purchase orders.
+8. **Automatic Sanitisation Workflow:** Post-handover `CLEANING_REQUIRED` vehicle locking, 5-point decontamination checklist, and supervisor sign-off before restoring to `AVAILABLE`.
+9. **Post-Emergency Intelligence Report:** Operational turnaround breakdown (dispatch delay, scene travel time, hospital handover latency, inventory consumed) with PDF export.
+10. **Multi-Agency Coordination:** Unified Incident Command coordinating Ambulance Services, Fire & Rescue, and Police with agency-specific resource assignments and shared timelines.
+
+---
+
 ## ⚙️ Quick Installation & Setup
 
 ### Prerequisites

@@ -26,8 +26,9 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  auditLogs     AuditLog[]
-  notifications Notification[]
+  auditLogs         AuditLog[]
+  notifications     Notification[]
+  chatConversations ChatConversation[]
 }
 
 model EmergencyCase {
@@ -71,12 +72,15 @@ model Ambulance {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  assignedCases      EmergencyCase[]
-  crewAssignments    CrewAssignment[]
-  inventory          AmbulanceInventory[]
-  maintenanceOrders  MaintenanceOrder[]
-  locationHistory    LocationHistory[]
-  transactions       InventoryTransaction[]
+  assignedCases          EmergencyCase[]
+  crewAssignments        CrewAssignment[]
+  inventory              AmbulanceInventory[]
+  maintenanceOrders      MaintenanceOrder[]
+  locationHistory        LocationHistory[]
+  transactions           InventoryTransaction[]
+  readinessAssessments   ReadinessAssessment[]
+  standbyRecommendations StandbyRecommendation[]
+  sanitisationTasks      SanitisationTask[]
 }
 
 model Employee {
@@ -127,6 +131,8 @@ model Hospital {
   emergencyCases       EmergencyCase[]
   hospitalAlerts       HospitalAlert[]
   users                User[]
+  capabilities         HospitalCapability[]
+  availabilityRecords  HospitalAvailability[]
 }
 
 model HospitalAlert {
@@ -255,4 +261,238 @@ model AuditLog {
 
   @@index([userId])
   @@index([entityType, entityId])
+}
+
+// ==========================================
+// 10 INNOVATIONS SCHEMA EXTENSIONS
+// ==========================================
+
+// Innovation 1: AeroMed AI Assistant Chatbot
+model ChatConversation {
+  id        String        @id @default(uuid())
+  userId    String?
+  user      User?         @relation(fields: [userId], references: [id])
+  language  String        @default("en") // "en" or "ta"
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  messages  ChatMessage[]
+
+  @@index([userId])
+}
+
+model ChatMessage {
+  id                   String           @id @default(uuid())
+  conversationId       String
+  conversation         ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender               String           // USER, ASSISTANT
+  messageText          String
+  intent               String?          // CHECK_AMBULANCE_AVAILABILITY, CASE_STATUS, etc.
+  requiresConfirmation Boolean          @default(false)
+  dataPayload          String?          // JSON response data
+  timestamp            DateTime         @default(now())
+
+  @@index([conversationId])
+}
+
+// Innovation 2: Ambulance Readiness Intelligence
+model ReadinessAssessment {
+  id                String            @id @default(uuid())
+  ambulanceId       String
+  ambulance         Ambulance         @relation(fields: [ambulanceId], references: [id], onDelete: Cascade)
+  overallScore      Float             // 0 to 100
+  category          String            // READY (80-100), LIMITED (60-79), NOT_READY (0-59)
+  reasonLowReadiness String?
+  correctiveAction  String?
+  assessedAt        DateTime          @default(now())
+  factors           ReadinessFactor[]
+
+  @@index([ambulanceId])
+}
+
+model ReadinessFactor {
+  id           String              @id @default(uuid())
+  assessmentId String
+  assessment   ReadinessAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  factorName   String              // VEHICLE_CONDITION, ESSENTIAL_INVENTORY, FUEL_BATTERY, CREW_AVAILABILITY, SANITISATION, GPS_COMMS
+  weight       Float               // e.g. 0.25
+  score        Float               // 0 to 100
+  details      String?
+  missingItems String?
+
+  @@index([assessmentId])
+}
+
+// Innovation 3: Intelligent Hospital Recommendation
+model HospitalCapability {
+  id             String   @id @default(uuid())
+  hospitalId     String
+  hospital       Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  departmentName String   // CARDIOLOGY, TRAUMA_CARE, ICU, NEUROLOGY, PEDIATRICS
+  hasICU         Boolean  @default(true)
+  hasCathLab     Boolean  @default(false)
+  hasTraumaWard  Boolean  @default(true)
+  totalBeds      Int      @default(20)
+  availableBeds  Int      @default(5)
+
+  @@index([hospitalId])
+}
+
+model HospitalAvailability {
+  id                   String   @id @default(uuid())
+  hospitalId           String
+  hospital             Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  status               String   @default("ACCEPTING") // ACCEPTING, FULL, DIVERTING
+  activeEmergencyCount Int      @default(0)
+  averageAckSeconds    Float    @default(120.0)
+  reportedAt           DateTime @default(now())
+
+  @@index([hospitalId])
+}
+
+// Innovation 4: Emergency Demand Forecasting
+model DemandForecast {
+  id                  String   @id @default(uuid())
+  targetHour          Int      // 0 to 23
+  targetDayOfWeek     Int      // 0 (Sun) to 6 (Sat)
+  geographicZone      String   // e.g. "T. Nagar", "Anna Nagar", "Mylapore", "Guindy", "Marina"
+  predictedCallVolume Float
+  modelUsed           String   @default("EXPONENTIAL_SMOOTHING") // EXPONENTIAL_SMOOTHING or MOVING_AVERAGE
+  mae                 Float    @default(0.42) // Mean Absolute Error
+  mse                 Float    @default(0.28) // Mean Squared Error
+  generatedAt         DateTime @default(now())
+}
+
+// Innovation 5: Dynamic Ambulance Standby Recommendation
+model StandbyRecommendation {
+  id                        String    @id @default(uuid())
+  ambulanceId               String
+  ambulance                 Ambulance @relation(fields: [ambulanceId], references: [id])
+  targetZone                String    // Recommended area to stage
+  targetLatitude            Float
+  targetLongitude           Float
+  estimatedCoverageIncrease Float     // e.g. 18.5%
+  rationale                 String
+  status                    String    @default("PROPOSED") // PROPOSED, APPROVED, REJECTED
+  approvedBy                String?
+  createdAt                 DateTime  @default(now())
+
+  @@index([ambulanceId])
+}
+
+// Innovation 6: Offline Emergency Data Synchronisation
+model OfflineSyncEvent {
+  id               String   @id @default(uuid())
+  idempotencyKey   String   @unique
+  eventType        String   // STATUS_UPDATE, GPS_TELEMETRY, VITALS_STREAM, INCIDENT_NOTE
+  payload          String   // JSON content
+  clientTimestamp  DateTime
+  serverReceivedAt DateTime @default(now())
+  status           String   @default("SYNCED") // SYNCED, CONFLICT, PROCESSED
+
+  @@index([idempotencyKey])
+}
+
+// Innovation 7: Medicine Expiry and Smart Redistribution
+model InventoryTransfer {
+  id                    String    @id @default(uuid())
+  sourceAmbulanceId     String
+  destinationAmbulanceId String
+  medicalItemId         String
+  quantity              Int
+  stockBeforeSource     Int
+  stockBeforeDest       Int
+  reason                String    // NEAR_EXPIRY, DEFICIT_BALANCING, EMERGENCY_RESTOCK
+  status                String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  approvedBy            String?
+  approvedAt            DateTime?
+  createdAt             DateTime  @default(now())
+
+  @@index([sourceAmbulanceId])
+  @@index([destinationAmbulanceId])
+  @@index([medicalItemId])
+}
+
+// Innovation 8: Automatic Sanitisation Workflow
+model SanitisationTask {
+  id                   String                 @id @default(uuid())
+  ambulanceId          String
+  ambulance            Ambulance              @relation(fields: [ambulanceId], references: [id])
+  emergencyCaseId      String?
+  cleaningPersonnel    String                 @default("Station Hygiene Staff")
+  status               String                 @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, APPROVED
+  startTime            DateTime?
+  endTime              DateTime?
+  supervisorApprovedBy String?
+  createdAt            DateTime               @default(now())
+  checklists           SanitisationChecklist[]
+
+  @@index([ambulanceId])
+}
+
+model SanitisationChecklist {
+  id              String           @id @default(uuid())
+  taskId          String
+  task            SanitisationTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  itemDescription String           // Stretcher Decontamination, Surface Wipedown, etc.
+  isCompleted     Boolean          @default(false)
+  inspectedBy     String?
+  verifiedAt      DateTime?
+
+  @@index([taskId])
+}
+
+// Innovation 9: Post-Emergency Intelligence Report
+model PostEmergencyReport {
+  id                       String   @id @default(uuid())
+  emergencyCaseId          String   @unique
+  caseNumber               String
+  dispatchDelaySeconds     Int
+  pickupTravelTimeSeconds  Int
+  hospitalTravelTimeSeconds Int
+  hospitalAckSeconds       Int
+  bottlenecks              String?
+  suggestedImprovements    String?
+  generatedAt              DateTime @default(now())
+
+  @@index([emergencyCaseId])
+}
+
+// Innovation 10: Multi-Agency Emergency Coordination
+model Incident {
+  id              String               @id @default(uuid())
+  incidentNumber  String               @unique // e.g. INC-2026-001
+  incidentType    String               // FIRE_EXPLOSION, MULTI_VEHICLE_COLLISION, BUILDING_COLLAPSE, HAZMAT, FLOOD_DISASTER
+  severity        String               // P1_CATASTROPHIC, P2_MAJOR, P3_MODERATE
+  locationAddress String
+  latitude        Float
+  longitude       Float
+  commanderName   String
+  status          String               @default("ACTIVE") // ACTIVE, CONTAINED, RESOLVED
+  createdAt       DateTime             @default(now())
+  agencies        IncidentAgency[]
+  assignments     IncidentAssignment[]
+}
+
+model IncidentAgency {
+  id              String   @id @default(uuid())
+  incidentId      String
+  incident        Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  agencyType      String   // AMBULANCE_SERVICES, FIRE_AND_RESCUE, POLICE_DEPARTMENT, DISASTER_MANAGEMENT
+  leadOfficer     String
+  personnelCount  Int      @default(4)
+  status          String   @default("RESPONDING")
+
+  @@index([incidentId])
+}
+
+model IncidentAssignment {
+  id                 String    @id @default(uuid())
+  incidentId         String
+  incident           Incident  @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  agencyType         String    // AMBULANCE_SERVICES, FIRE_AND_RESCUE, POLICE_DEPARTMENT
+  resourceIdentifier String    // e.g. "TN-01-EM-1001" or "FIRE-TENDER-04" or "PATROL-CAR-12"
+  assignedAt         DateTime  @default(now())
+  releasedAt         DateTime?
+
+  @@index([incidentId])
 }

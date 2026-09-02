@@ -20,6 +20,8 @@ import Analytics from './pages/Analytics';
 import Users from './pages/Users';
 import AuditLogs from './pages/AuditLogs';
 import SosConsole from './pages/SosConsole';
+import InnovationHub from './pages/InnovationHub';
+import AeroMedAssistant from './components/chat/AeroMedAssistant';
 
 function MainApp() {
   const { user, loading } = useAuth();
@@ -81,6 +83,8 @@ function MainApp() {
         return <Maintenance />;
       case 'analytics':
         return <Analytics />;
+      case 'innovation-hub':
+        return <InnovationHub setActiveTab={setActiveTab} />;
       case 'users':
         return <Users />;
       case 'audit-logs':
@@ -104,6 +108,8 @@ function MainApp() {
           {renderActivePage()}
         </main>
       </div>
+      {/* Innovation 1: Floating AeroMed AI Assistant */}
+      <AeroMedAssistant />
     </div>
   );
 }

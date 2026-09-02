@@ -43,6 +43,9 @@ app.use('/api/audit-logs', require('./routes/auditRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/sos', require('./routes/sosRoutes'));
+app.use('/api/chatbot', require('./routes/chatbotRoutes'));
+app.use('/api/innovation', require('./routes/innovationRoutes'));
+app.use('/api/sync', require('./routes/syncRoutes'));
 
 // 404 handler
 app.use((req, res) => {
