@@ -3,59 +3,200 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, Tooltip, useMap } fro
 import L from 'leaflet';
 import { getShortestRoadRoute } from '../../services/routingService';
 
-// Custom SVG Markers
+// 1. Google Maps-style Ambulance Vehicle Marker
 const createVehicleIcon = (status, reg, isSelected) => {
-  const color =
-    status === 'ON_TRIP' ? '#dc2626' :
-    status === 'AVAILABLE' ? '#16a34a' :
-    status === 'MAINTENANCE' ? '#d97706' : '#64748b';
+  const isEmergency = status === 'ON_TRIP';
+  const mainColor = isEmergency ? '#dc2626' : (status === 'AVAILABLE' ? '#16a34a' : '#d97706');
+  const glowShadow = isSelected
+    ? '0 0 0 3px #3b82f6, 0 8px 20px rgba(0,0,0,0.35)'
+    : '0 3px 10px rgba(0,0,0,0.25)';
 
   return L.divIcon({
     className: 'custom-vehicle-marker',
     html: `
-      <div style="display:flex; flex-direction:column; align-items:center; cursor:pointer;">
-        <div style="background-color:${color}; color:white; font-size:11px; font-weight:800; padding:3px 8px; border-radius:8px; box-shadow:0 3px 8px rgba(0,0,0,0.35); white-space:nowrap; border:${isSelected ? '2.5px solid #facc15' : '1.5px solid white'}; transform:${isSelected ? 'scale(1.12)' : 'scale(1)'}; transition:all 0.2s;">
-          🚑 ${reg}
+      <div style="display:flex; flex-direction:column; align-items:center; cursor:pointer; transform:${isSelected ? 'scale(1.12)' : 'scale(1)'}; transition:all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); user-select:none;">
+        <!-- Google Maps Vehicle Pill -->
+        <div style="
+          background: #ffffff;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 4px 9px;
+          border-radius: 9999px;
+          border: 2px solid ${mainColor};
+          box-shadow: ${glowShadow};
+          white-space: nowrap;
+          font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        ">
+          <!-- Ambulance Icon Badge -->
+          <div style="
+            width: 20px;
+            height: 20px;
+            background: ${mainColor};
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+          ">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10H4c-1.1 0-2 .9-2 2v4c0 .6.4 1 1 1h2"/>
+              <circle cx="7" cy="17" r="2"/>
+              <path d="M9 17h6"/>
+              <circle cx="17" cy="17" r="2"/>
+              <path d="M12 6v4"/>
+              <path d="M10 8h4"/>
+            </svg>
+          </div>
+          <!-- Registration & Status -->
+          <div style="display:flex; flex-direction:column; line-height:1.15; text-align:left;">
+            <span style="font-size:11px; font-weight:800; color:#0f172a; letter-spacing:0.02em;">${reg}</span>
+            <span style="font-size:9px; font-weight:700; color:${mainColor}; text-transform:uppercase;">${status.replace('_', ' ')}</span>
+          </div>
         </div>
-        <div style="width:${isSelected ? '14px' : '12px'}; height:${isSelected ? '14px' : '12px'}; background-color:${color}; border:${isSelected ? '3px solid #facc15' : '2px solid white'}; border-radius:50%; margin-top:-3px; box-shadow:0 2px 5px rgba(0,0,0,0.4);"></div>
+
+        <!-- Google Maps Pin Pointer Tip -->
+        <div style="
+          width: 0;
+          height: 0;
+          border-left: 6px solid transparent;
+          border-right: 6px solid transparent;
+          border-top: 8px solid ${mainColor};
+          margin-top: -1px;
+          filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
+        "></div>
+
+        <!-- Animated Emergency Siren Beacon Wave (when on trip) -->
+        ${isEmergency ? `
+          <div style="
+            position: absolute;
+            bottom: -2px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: rgba(220, 38, 38, 0.45);
+            animation: ping 1.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+          "></div>
+        ` : ''}
       </div>
     `,
-    iconSize: [90, 45],
-    iconAnchor: [45, 40],
-    popupAnchor: [0, -40]
+    iconSize: [115, 50],
+    iconAnchor: [57, 46],
+    popupAnchor: [0, -46]
   });
 };
 
-const createPickupIcon = (label = 'Patient Pickup') => {
+// 2. Google Maps-style Patient Emergency Marker
+const createPickupIcon = (label = 'Patient Emergency') => {
   return L.divIcon({
     className: 'custom-pickup-marker',
     html: `
-      <div style="display:flex; flex-direction:column; align-items:center;">
-        <div style="background-color:#dc2626; color:white; font-size:11px; font-weight:800; padding:3px 8px; border-radius:8px; box-shadow:0 3px 10px rgba(220,38,38,0.4); border:2px solid white; white-space:nowrap;">
-          📍 ${label}
+      <div style="display:flex; flex-direction:column; align-items:center; cursor:pointer; user-select:none;">
+        <!-- Emergency Floating Pill Badge -->
+        <div style="
+          background: #ea4335;
+          color: white;
+          font-size: 10px;
+          font-weight: 800;
+          padding: 2.5px 8px;
+          border-radius: 6px;
+          box-shadow: 0 4px 10px rgba(234, 67, 53, 0.4);
+          border: 1.5px solid white;
+          white-space: nowrap;
+          margin-bottom: 3px;
+          letter-spacing: 0.03em;
+          text-transform: uppercase;
+          font-family: system-ui, -apple-system, sans-serif;
+        ">
+          🚨 ${label}
         </div>
-        <div style="width:14px; height:14px; background-color:#dc2626; border:2px solid white; border-radius:50%; margin-top:-3px; animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+
+        <!-- Google Maps Teardrop Emergency Pin -->
+        <div style="
+          width: 32px;
+          height: 40px;
+          position: relative;
+          filter: drop-shadow(0 4px 6px rgba(0,0,0,0.35));
+        ">
+          <svg width="32" height="40" viewBox="0 0 32 40" fill="none">
+            <!-- Teardrop Pin Body -->
+            <path d="M16 0C7.163 0 0 7.163 0 16c0 12 16 24 16 24s16-12 16-24c0-8.837-7.163-16-16-16z" fill="#ea4335"/>
+            <!-- White Inner Circle -->
+            <circle cx="16" cy="16" r="10" fill="white"/>
+            <!-- Emergency Cross Symbol in Red -->
+            <path d="M16 10v12M10 16h12" stroke="#ea4335" stroke-width="3.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <!-- Pulsing Ground Emergency Beacon -->
+        <div style="
+          position: absolute;
+          bottom: 2px;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: rgba(234, 67, 53, 0.5);
+          animation: ping 1.3s cubic-bezier(0, 0, 0.2, 1) infinite;
+          z-index: -1;
+        "></div>
       </div>
     `,
-    iconSize: [110, 45],
-    iconAnchor: [55, 40],
-    popupAnchor: [0, -40]
+    iconSize: [130, 68],
+    iconAnchor: [65, 64],
+    popupAnchor: [0, -64]
   });
 };
 
-const createHospitalIcon = (name) => {
+// 3. Google Maps-style Hospital Marker
+const createHospitalIcon = (name, isDesignated = false) => {
+  const pinColor = isDesignated ? '#059669' : '#1a73e8'; // Google Blue or Designated Emerald Green
+  const cleanName = name ? name.replace('Emergency Trauma Centre', 'Trauma').replace('Super Speciality Hospital', 'Hospital') : 'Hospital';
+
   return L.divIcon({
     className: 'custom-hosp-marker',
     html: `
-      <div style="display:flex; flex-direction:column; align-items:center;">
-        <div style="background-color:#059669; color:white; font-size:11px; font-weight:800; padding:3px 8px; border-radius:8px; box-shadow:0 3px 10px rgba(5,150,105,0.4); border:2px solid white; white-space:nowrap;">
-          🏥 ${name || 'Hospital'}
+      <div style="display:flex; flex-direction:column; align-items:center; cursor:pointer; user-select:none;">
+        <!-- Google Maps Hospital Teardrop Pin -->
+        <div style="
+          width: 30px;
+          height: 38px;
+          position: relative;
+          filter: drop-shadow(0 3px 6px rgba(0,0,0,0.3));
+        ">
+          <svg width="30" height="38" viewBox="0 0 32 40" fill="none">
+            <!-- Pin Body -->
+            <path d="M16 0C7.163 0 0 7.163 0 16c0 12 16 24 16 24s16-12 16-24c0-8.837-7.163-16-16-16z" fill="${pinColor}"/>
+            <!-- White Inner Circle -->
+            <circle cx="16" cy="16" r="10" fill="white"/>
+            <!-- Bold 'H' (Google Maps Hospital POI symbol) -->
+            <text x="16" y="21" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="900" fill="${pinColor}" text-anchor="middle">H</text>
+          </svg>
         </div>
-        <div style="width:14px; height:14px; background-color:#059669; border:2px solid white; border-radius:50%; margin-top:-3px;"></div>
+
+        <!-- Google Maps Style POI Label -->
+        <div style="
+          background: #ffffff;
+          color: #0f172a;
+          font-size: 10px;
+          font-weight: 800;
+          padding: 2.5px 7px;
+          border-radius: 9999px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+          border: 1px solid ${pinColor};
+          white-space: nowrap;
+          margin-top: -2px;
+          max-width: 140px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          font-family: system-ui, -apple-system, sans-serif;
+        ">
+          🏥 ${cleanName}
+        </div>
       </div>
     `,
-    iconSize: [110, 45],
-    iconAnchor: [55, 40],
+    iconSize: [140, 60],
+    iconAnchor: [70, 40],
     popupAnchor: [0, -40]
   });
 };
@@ -287,7 +428,7 @@ export default function LiveMap({
             <Marker
               key={hosp.id}
               position={[hosp.latitude, hosp.longitude]}
-              icon={createHospitalIcon(hosp.name.split(' ')[0])}
+              icon={createHospitalIcon(hosp.name.split(' ')[0], hasUserSelection && isDestination)}
             >
               <Popup>
                 <div className="text-xs space-y-1">
