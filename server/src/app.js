@@ -42,6 +42,7 @@ app.use('/api/analytics', require('./routes/analyticsRoutes'));
 app.use('/api/audit-logs', require('./routes/auditRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/sos', require('./routes/sosRoutes'));
 
 // 404 handler
 app.use((req, res) => {

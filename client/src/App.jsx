@@ -19,6 +19,7 @@ import Maintenance from './pages/Maintenance';
 import Analytics from './pages/Analytics';
 import Users from './pages/Users';
 import AuditLogs from './pages/AuditLogs';
+import SosConsole from './pages/SosConsole';
 
 function MainApp() {
   const { user, loading } = useAuth();
@@ -56,6 +57,8 @@ function MainApp() {
     switch (activeTab) {
       case 'dashboard':
         return <Dashboard setActiveTab={setActiveTab} />;
+      case 'sos-console':
+        return <SosConsole onNavigateToTracking={() => setActiveTab('live-tracking')} />;
       case 'emergencies':
         return <Emergencies setActiveTab={setActiveTab} />;
       case 'create-emergency':

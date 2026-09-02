@@ -15,6 +15,10 @@
       "destination": "/api/index.js"
     },
     {
+      "source": "/sos",
+      "destination": "/sos/index.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

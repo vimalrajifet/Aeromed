@@ -28,6 +28,12 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen, onClose }) {
       roles: ['ADMIN', 'OPERATOR', 'FLEET_MGR', 'INVENTORY_MGR', 'HOSPITAL_COORD']
     },
     {
+      id: 'sos-console',
+      label: '🚨 SOS Dispatch Radar',
+      icon: Radio,
+      roles: ['ADMIN', 'OPERATOR', 'DRIVER', 'FLEET_MGR', 'HOSPITAL_COORD']
+    },
+    {
       id: 'emergencies',
       label: 'Emergency Cases',
       icon: AlertCircle,

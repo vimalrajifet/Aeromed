@@ -71,3 +71,9 @@ export const userApi = {
   createUser: (data) => api.post('/users', data),
   toggleStatus: (id) => api.patch(`/users/${id}/toggle-status`)
 };
+
+export const sosApi = {
+  createAlert: (data) => api.post('/sos/alert', data),
+  broadcastToNearest: (caseId) => api.post(`/sos/broadcast/${caseId}`),
+  getStatus: (caseId) => api.get(`/sos/status/${caseId}`)
+};
