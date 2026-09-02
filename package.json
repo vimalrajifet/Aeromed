@@ -9,7 +9,7 @@
     "start:server": "cd server && npm start",
     "seed": "cd server && npm run seed",
     "test": "cd server && npm test",
-    "build:client": "cd client && npm run build",
+    "build:client": "npm --prefix client install && npm --prefix client run build",
     "build:server": "npx prisma generate --schema=./server/prisma/schema.prisma",
     "vercel-build": "npm run build:server && npm run build:client"
   },
